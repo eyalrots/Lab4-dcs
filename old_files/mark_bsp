@@ -1,0 +1,80 @@
+#include  "../header/bsp.h"    // private library - BSP layer
+
+//-----------------------------------------------------------------------------
+//           GPIO configuration
+//-----------------------------------------------------------------------------
+void GPIOconfig(void){
+  WDTCTL = WDTHOLD | WDTPW;     // Stop WDT
+
+  //PB0 Setup
+  PBsArrPortSel &= ~0x01; // P1.0 GPIO
+  PBsArrPortDir &= ~0x01; // P1.0 Input mode
+  PBsArrIntEdgeSel |= 0x01; // P1.0 pull-up mode
+  PBsArrIntEn |= 0x01; // P1.0 interrupt enable
+  PBsArrIntPend &= ~0x01; // P1.0 clear pending interrupts
+
+  BuzzPortSel |= BIT4;
+  BuzzPortDir |= BIT4;
+
+
+  // LCD Setup
+  LCD_CTL_SEL &= ~0xE0;              // GPIO capability for P2.5,6,7
+
+  _BIS_SR(GIE);                     // enable interrupts globally
+}
+
+//-------------------------------------------------------------------------------------
+//            Timer_A1 configuration
+//-------------------------------------------------------------------------------------
+void TIMER_A1config(void){
+     TA1CTL = TASSEL_2;
+
+     // output compare configuration for register TACCTL2
+     TA1CCTL2 |= OUTMOD_7; // TA1CCR0 sets frequency, TA1CCR1 sets duty cycle
+
+
+}
+
+//-------------------------------------------------------------------------------------
+//            Timer_A0 configuration
+//-------------------------------------------------------------------------------------
+void TIMER_A0config(void){
+  TA0CTL |= TACLR; //reset the counter
+  TA0CTL = TASSEL_2 + ID_3 + TAIE; // set counter to (=2^17Hz), enable interrupts
+  TA0CTL &= ~TAIFG; //clear pending interrupts
+  TA0CCR0 = TARmax; // in up mode, will request an interrupt each 500msec
+}
+
+//-------------------------------------------------------------------------------------
+//            ADC configuration
+//-------------------------------------------------------------------------------------
+void ADCconfig(void){
+    ADC10CTL0 = SREF_0 | ADC10SHT_2 | MSC | ADC10IE; // 0-3.3v reference voltage, 6*CLK to convert, allow multiple sampling and conversion, enable interrupts
+    ADC10CTL0 &= ~ADC10IFG; //clear pending interrupts
+
+    ADC10CTL1 = INCH_3 | SHS_0 | ADC10SSEL_3 | CONSEQ_2; // repeat-signal-channel conversion of the signal stored at A3 using SMCLK source
+    ADC10AE0 = A3; //enable P1.3 as analog input
+
+}
+
+//-------------------------------------------------------------------------------------
+//            UART configuration
+//-------------------------------------------------------------------------------------
+void UARTconfig(void) {
+
+    P1SEL |= 0x06;       // P1.1 = RXD, P1.2=TXD
+    P1SEL2 |= 0x06;      // P1.1 = RXD, P1.2=TXD
+
+    UCA0CTL1 |= UCSWRST; // hold in reset whilst configurating
+
+    UCA0CTL1 |= UCSSEL_2; // SMCLK source
+    UCA0MCTL = UCBRS0;
+    UCA0BR0 = 109; //Baud Rate: 9600
+    UCA0BR1 = 0;
+
+    UCA0CTL1 &= ~UCSWRST;  // Release USCI from reset
+
+    IE2 |= UCA0RXIE; //enable rx
+
+}
+

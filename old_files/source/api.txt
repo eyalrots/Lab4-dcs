@@ -1,0 +1,124 @@
+#include "../header/api.h"
+#include <stdlib.h>
+#include <string.h>
+
+extern volatile FSM_state_t state;
+extern volatile SYS_mode_t lpm_mode;
+
+volatile unsigned int count;
+volatile int X, PB1_pressed;
+volatile char x_string[5];
+
+const int tone_arr[7] = {1000, 1250, 1500, 1750, 2000, 2250, 2500};
+const unsigned long SMCLK_FREQ = 1091000;
+
+// print letter (b) at location (start) on LCD
+void print_b(char b, int start) {
+    int i;
+    for (i=start; i>0; i--) {
+        lcd_cursor_right();
+    }
+    lcd_data(b);
+    cursor_off;
+}
+// print a number (num) of length (len) at location (start) with a fill character (fill)
+void print_num(unsigned int num, int start, int len, char fill) {
+    lcd_home();
+    unsigned int i;
+    char digit;
+    for (i=start; i>0; i--) lcd_cursor_right();
+    i=0;
+    while (num != 0 && i < len) {
+        digit  = num % 10 + 0x30;
+        num /= 10;
+        lcd_cursor_left();
+        lcd_data(digit);
+        lcd_cursor_left();
+        i++;
+    }
+    while (i < len) {
+        lcd_cursor_left();
+        lcd_data(fill);
+        lcd_cursor_left();
+        i++;
+    }
+}
+
+void count_on_LCD() {
+    lcd_puts("state-1");
+    startTimerA0();
+    startTimerA0();
+    lcd_clear();
+    while (state==state1) {
+        count = count==0xffff ? 0 : count+1;
+        print_num(count, 5, 5, 0x30);
+        cursor_off;
+        startTimerA0();
+    }
+}
+
+void tone_generator(){
+    // up-mode
+    TA1CTL = TASSEL_2 + MC_1 + TACLR;
+    //static unsigned int idx = 0;
+    lcd_clear();
+    lcd_puts("state-2");
+    while(state == state2){
+        unsigned int f_out = 2500; //*(tone_arr+idx); // takes value from tome_arr!
+
+        // Calculate period of pwm
+        unsigned int period_to_pwm = SMCLK_FREQ/f_out;
+
+
+
+        TA1CCR0 = period_to_pwm;
+        TA1CCR1 = (int) period_to_pwm/2; // 50% DT
+//        print_num(TA1CCTL1, 10, 10, 0x30);
+//        idx = idx==6? 0 : idx+1;
+
+//        // delay of X[ms]
+//        startTimerA0();
+//        startTimerA0();
+//        startTimerA0();
+    }
+    lcd_clear();
+    // Stop Timer
+    TA1CTL = MC_0;
+}
+
+void x_to_int() {
+    lcd_clear();
+    lcd_puts("state-3");
+    if (state==state3) {
+        X = atoi((const char *)x_string);
+    }
+    lcd_clear();
+}
+
+void disp_pot_val() {
+    lcd_clear();
+    lcd_puts("POT value:  .");
+    int pot_val;
+    adc_start_conversion();
+    while (state==state4) {
+        pot_val = pot_read();
+        print_num(pot_val/100, 12, 1, 0x30);
+        print_num(pot_val%100, 15, 2, 0x30);
+    }
+    adc_stop_conversion();
+    lcd_clear();
+}
+
+void my_negev() {
+    lcd_clear();
+    lcd_puts("state-5");
+    while (state==state5) {
+        enterLPM(mode0);
+        if (PB1_pressed) {
+            uart_tx_enable();
+            enterLPM(mode0);
+        }
+        lcd_clear();
+    }
+    uart_tx_disable();
+}

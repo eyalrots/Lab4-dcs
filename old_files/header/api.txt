@@ -1,0 +1,14 @@
+#ifndef _api_H_
+#define _api_H_
+
+#include  "../header/halGPIO.h"
+
+extern void print_b(char, int);
+extern void print_num(unsigned int, int, int, char);
+extern void count_on_LCD();
+extern void tone_generator();
+extern void x_to_int();
+extern void disp_pot_val();
+extern void my_negev();
+
+#endif

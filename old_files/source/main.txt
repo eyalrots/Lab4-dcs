@@ -1,0 +1,48 @@
+#include <msp430g2553.h>
+#include "../header/api.h"
+
+volatile FSM_state_t state;
+volatile SYS_mode_t lpm_mode;
+
+int main(void)
+{
+  volatile unsigned int i;
+  WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog timer
+
+  state = state0;
+  lpm_mode = mode0;
+
+  sysConfig();
+  lcd_init();
+  lcd_clear();
+
+  while(1) {
+    switch (state) {
+      case state0:
+        enterLPM(mode0);
+        break;
+      case state1:
+          count_on_LCD();
+          state=state0;
+          break;
+      case state2:
+          tone_generator();
+          state=state0;
+          break;
+      case state3:
+          x_to_int();
+          state=state0;
+          break;
+      case state4:
+          disp_pot_val();
+          break;
+      case state5:
+          my_negev();
+          break;
+      default:
+        state=state0;
+        break;
+    }
+  }
+}
+
