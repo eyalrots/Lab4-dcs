@@ -46,8 +46,6 @@ int main(void)
           zero_all();
           state=state0;
           break;
-      case state8:
-          print_on_lcd();
       default:
         state=state0;
         break;

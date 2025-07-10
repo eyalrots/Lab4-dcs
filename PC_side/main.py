@@ -50,9 +50,6 @@
 import serial
 
 def main():
-    options = ['1','2','3','4','5','6','7','8']
-    flag = 1
-
     menu = """                            Menu
     1. Counting onto the LCD screen with a delay of X[ms]
     2. Circular tone series via Buzzer with delay of X[ms]
@@ -72,42 +69,25 @@ def main():
     ser.reset_output_buffer()       
 
     while True:  # while the output buffer isn't empty
-        if flag:
-            choice = input("Select from Menu: ")
+        choice = input("Select from Menu: ")
         if choice in ['1', '2', '4', '6', '8']:
             ser.write(choice.encode())
-            flag=1
 
         elif choice == '3':
             ser.write(choice.encode())
             delay = input("Enter Delay [ms]: ")
             delay += '\n'
             ser.write(delay.encode())
-            flag=1
 
 
         elif choice == '5':
             ser.write(choice.encode())
             line = ser.readline().decode()
             print(line[:-1])
-            flag=1
             continue
 
         elif choice == '7':
             print(menu)
-            flag=1
-
-        elif choice == '9':
-            ser.write(choice.encode())
-            in_str = input("Enter a string or other menu option:")
-            for option in options:
-                if option in in_str:
-                    choice = option
-                    flag=0
-                    continue
-            in_str += '\n'
-            ser.write(in_str.encode())
-            flag=0
 
         else:
             print('Invalid choice, try again')
