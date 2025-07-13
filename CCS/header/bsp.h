@@ -53,6 +53,7 @@ typedef enum {
     state5,
     state6,
     state7,
+    state8,
 }FSM_state_t;
 
 typedef enum {

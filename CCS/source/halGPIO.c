@@ -8,14 +8,17 @@ extern volatile SYS_mode_t lpm_mode;
 
 extern volatile char x_string[];
 extern volatile int X, PB1_pressed, count;
+extern volatile char in_str[];
 
-volatile unsigned int buzz_idx, j, delay_ifg, Nadc;
+volatile unsigned int buzz_idx, j, delay_ifg, Nadc, str_flg, wr_flg;
 
 //--------------------------------------------------------------------
 //             System Configuration
 //--------------------------------------------------------------------
 void system_config() {
     delay_ifg=1;
+    str_flg = 0;
+    wr_flg = 0;
     __GPIO_config();
     __timerA0_config();
     __timerA1_config();
@@ -390,6 +393,16 @@ __interrupt void USCI0RX_ISR() {
             j=0;
         }
     }
+    // read string for state 8
+    else if (str_flg) {
+        in_str[j++] = UCA0RXBUF;
+        wr_flg = 0;
+        if (UCA0RXBUF=='\n' || j==32){
+            wr_flg = 1;
+            str_flg = !str_flg;
+            j=0;
+        }
+    }
     else {
         switch(UCA0RXBUF) {
             case '1':
@@ -413,6 +426,10 @@ __interrupt void USCI0RX_ISR() {
                 break;
             case '7':
                 state = state7;
+                break;
+            case '9':
+                state = state8;
+                str_flg = 1;
                 break;
             case '8':
                 state = state0;

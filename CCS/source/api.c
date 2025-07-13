@@ -5,10 +5,11 @@
 extern volatile FSM_state_t state;
 extern volatile SYS_mode_t lpm_mode;
 
-extern volatile unsigned int delay_ifg;
+extern volatile unsigned int delay_ifg, wr_flg;
 
 volatile int X, PB1_pressed, count;
 volatile char x_string[5];
+volatile char in_str[32];
 
 void count_on_LCD() {
     timer_enable();
@@ -72,4 +73,31 @@ void zero_all() {
     lcd_clear();
     timer_disable();
     count = 0;
+}
+
+void clean_str(volatile char* str, int len) {
+    unsigned int i = 0;
+    for (i=0; i<len; i++) {
+        str[i] = 0x20;
+    }
+}
+
+void print_on_lcd() {
+    unsigned int i=0;
+    int len = strlen((const char *)in_str);
+
+    while (state == state8) {
+        if (wr_flg) {
+            lcd_clear();
+            for (i=0; i<len; i++) {
+                if (i == 16) {
+                    lcd_new_line;
+                }
+                lcd_data(in_str[i]);
+            }
+            clean_str(in_str, len);
+            return;
+        }
+
+    }
 }
